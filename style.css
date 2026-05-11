@@ -1010,7 +1010,8 @@ body {
         top: auto; left: 0; right: 0; bottom: 0;
         border-right: none;
         border-top: 1px solid var(--border);
-        padding: 0 8px env(safe-area-inset-bottom, 0px);
+        padding: 0 8px;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
         justify-content: center;
         background: rgba(255,255,255,0.92);
         backdrop-filter: blur(20px);
@@ -1040,7 +1041,8 @@ body {
     /* ---- Main content ---- */
     #main-content {
         margin-left: 0;
-        padding: 20px 16px 84px;
+        padding: 20px 16px;
+        padding-bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     }
 
     /* ---- Topbar ---- */
