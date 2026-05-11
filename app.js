@@ -1,4 +1,8 @@
-/* ===== DATA ===== */
+/* ===== DATA & SUPABASE ===== */
+const supabaseUrl = 'https://udqmlctpcprzoknkqowb.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkcW1sY3RwY3Byem9rbmtxb3diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MzAxMjgsImV4cCI6MjA5NDEwNjEyOH0.AaRohmkuAysf6uhOZ0doCxmsIC5U7br1VQW3DNPcTQY';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
 const SK = { contracts: 'dash_contracts', tasks: 'dash_tasks', events: 'dash_events' };
 const load = k => { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } };
 const save = (k, d) => localStorage.setItem(k, JSON.stringify(d));
@@ -6,6 +10,38 @@ const save = (k, d) => localStorage.setItem(k, JSON.stringify(d));
 let contracts = load(SK.contracts);
 let tasks = load(SK.tasks);
 let events = load(SK.events);
+
+async function dbUpsert(table, item) {
+    try { await supabase.from(table).upsert(item); } catch (e) { console.error('Supabase error:', e); }
+}
+
+async function dbDelete(table, id) {
+    try { await supabase.from(table).delete().eq('id', id); } catch (e) { console.error('Supabase error:', e); }
+}
+
+async function syncSupabase() {
+    try {
+        const [resC, resT, resE] = await Promise.all([
+            supabase.from('contracts').select('*'),
+            supabase.from('tasks').select('*'),
+            supabase.from('events').select('*')
+        ]);
+        
+        if (resC.data && resC.data.length > 0) { contracts = resC.data; save(SK.contracts, contracts); }
+        if (resT.data && resT.data.length > 0) { tasks = resT.data; save(SK.tasks, tasks); }
+        if (resE.data && resE.data.length > 0) { events = resE.data; save(SK.events, events); }
+        
+        // Push local to Supabase if Supabase is empty (Migration)
+        if ((!resC.data || resC.data.length === 0) && contracts.length > 0) { contracts.forEach(c => dbUpsert('contracts', c)); }
+        if ((!resT.data || resT.data.length === 0) && tasks.length > 0) { tasks.forEach(t => dbUpsert('tasks', t)); }
+        if ((!resE.data || resE.data.length === 0) && events.length > 0) { events.forEach(e => dbUpsert('events', e)); }
+
+        if (currentView === 'overview') renderOverview();
+        if (currentView === 'contracts') renderContracts();
+        if (currentView === 'tasks') renderTasks();
+        if (currentView === 'calendar') renderCalendar();
+    } catch (e) { console.error('Supabase sync error:', e); }
+}
 
 /* ===== STATE ===== */
 let currentView = 'overview';
@@ -267,6 +303,7 @@ function renderContracts() {
     list.querySelectorAll('[data-action="edit"]').forEach(b => b.addEventListener('click', () => openEditContract(b.dataset.id)));
     list.querySelectorAll('[data-action="delete"]').forEach(b => b.addEventListener('click', () => {
         contracts = contracts.filter(x => x.id !== b.dataset.id);
+        dbDelete('contracts', b.dataset.id);
         save(SK.contracts, contracts); renderContracts(); renderOverview(); toast('Supprimé');
     }));
 }
@@ -329,10 +366,11 @@ document.getElementById('contract-form').addEventListener('submit', e => {
 
     if (editingContractId) {
         const c = contracts.find(x => x.id === editingContractId);
-        if (c) { c.name = name; c.amount = amount; c.month = month; c.status = formStatus; c.company = formCompany; }
+        if (c) { c.name = name; c.amount = amount; c.month = month; c.status = formStatus; c.company = formCompany; dbUpsert('contracts', c); }
         toast('Modifié ✓');
     } else {
-        contracts.push({ id: uid(), name, amount, month, status: formStatus, company: formCompany, createdAt: Date.now() });
+        const c = { id: uid(), name, amount, month, status: formStatus, company: formCompany, createdAt: Date.now() };
+        contracts.push(c); dbUpsert('contracts', c);
         toast('Ajouté ✓');
     }
 
@@ -377,6 +415,7 @@ function renderTasks() {
         list.querySelectorAll('[data-action="delete"]').forEach(b => b.addEventListener('click', e => {
             e.stopPropagation();
             tasks = tasks.filter(x => x.id !== b.dataset.id);
+            dbDelete('tasks', b.dataset.id);
             save(SK.tasks, tasks); renderTasks(); toast('Supprimée');
         }));
 
@@ -401,6 +440,7 @@ function initDrag(list) {
         const t = tasks.find(x => x.id === dragId);
         if (t && t.status !== list.dataset.status) {
             t.status = list.dataset.status;
+            dbUpsert('tasks', t);
             save(SK.tasks, tasks);
             renderTasks();
             toast(list.dataset.status === 'done' ? 'Terminée ✓' : 'Déplacée');
@@ -447,10 +487,11 @@ document.getElementById('task-form').addEventListener('submit', e => {
     const status = document.getElementById('task-status-select').value;
     if (editingTaskId) {
         const t = tasks.find(x => x.id === editingTaskId);
-        if (t) { t.title = title; t.priority = priority; t.status = status; t.company = taskFormCompany; }
+        if (t) { t.title = title; t.priority = priority; t.status = status; t.company = taskFormCompany; dbUpsert('tasks', t); }
         toast('Modifiée ✓');
     } else {
-        tasks.push({ id: uid(), title, priority, status, company: taskFormCompany, createdAt: Date.now() });
+        const t = { id: uid(), title, priority, status, company: taskFormCompany, createdAt: Date.now() };
+        tasks.push(t); dbUpsert('tasks', t);
         toast('Ajoutée ✓');
     }
 
@@ -510,10 +551,11 @@ document.getElementById('event-form').addEventListener('submit', e => {
 
     if (editingEventId) {
         const ev = events.find(x => x.id === editingEventId);
-        if (ev) { ev.title = title; ev.date = date; ev.time = time; ev.company = eventFormCompany; }
+        if (ev) { ev.title = title; ev.date = date; ev.time = time; ev.company = eventFormCompany; dbUpsert('events', ev); }
         toast('Modifié ✓');
     } else {
-        events.push({ id: uid(), title, date, time, company: eventFormCompany, createdAt: Date.now() });
+        const ev = { id: uid(), title, date, time, company: eventFormCompany, createdAt: Date.now() };
+        events.push(ev); dbUpsert('events', ev);
         toast('Ajouté ✓');
     }
 
@@ -625,6 +667,7 @@ function renderDayPanel() {
         item.addEventListener('click', (e) => {
             if (e.target.closest('.delete')) {
                 events = events.filter(x => x.id !== item.dataset.id);
+                dbDelete('events', item.dataset.id);
                 save(SK.events, events);
                 renderCalendar();
                 toast('Supprimé ✓');
@@ -662,5 +705,5 @@ function checkMigration() {
 }
 
 /* ===== INIT ===== */
-checkMigration();
 renderOverview();
+syncSupabase();
