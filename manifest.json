@@ -1,0 +1,17 @@
+{
+  "name": "Nira & Magenty Dash",
+  "short_name": "Dash",
+  "description": "Dashboard de gestion revenus et organisation",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f5f7",
+  "theme_color": "#38bdf8",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1041/1041916.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Dash — Nira & Magenty</title>
+    <meta name="description" content="Dashboard personnel pour suivre ses revenus et organiser son travail">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#38bdf8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Dash">
+</head>
+<body>
+    <div id="app">
+        <!-- Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-top">
+                <div class="sidebar-logo">
+                    <div class="logo-mark">D</div>
+                </div>
+
+                <ul class="nav-links">
+                    <li><button class="nav-btn active" data-view="overview" id="nav-overview">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>
+                    </button></li>
+                    <li><button class="nav-btn" data-view="contracts" id="nav-contracts">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </button></li>
+                    <li><button class="nav-btn" data-view="tasks" id="nav-tasks">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    </button></li>
+                    <li><button class="nav-btn" data-view="calendar" id="nav-calendar">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </button></li>
+                </ul>
+            </div>
+
+            <div class="sidebar-bottom">
+                <div class="sidebar-company-indicator" id="sidebar-company-indicator">
+                    <div class="company-dot" id="sidebar-dot"></div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main -->
+        <main id="main-content">
+
+            <!-- ===== OVERVIEW ===== -->
+            <section id="view-overview" class="view active">
+                <!-- Top bar -->
+                <header class="topbar">
+                    <div class="topbar-left">
+                        <h1 class="page-title">Revenus</h1>
+                        <div class="month-nav">
+                            <button class="icon-btn" id="prev-month" aria-label="Mois précédent">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                            </button>
+                            <span class="month-label" id="month-display"></span>
+                            <button class="icon-btn" id="next-month" aria-label="Mois suivant">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="company-switcher" id="company-switcher">
+                        <button class="company-chip active" data-company="all" id="chip-all">Tout</button>
+                        <button class="company-chip nira" data-company="nira" id="chip-nira">
+                            <span class="chip-dot nira-dot"></span>Nira
+                        </button>
+                        <button class="company-chip magenty" data-company="magenty" id="chip-magenty">
+                            <span class="chip-dot magenty-dot"></span>Magenty
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Hero: ENCAISSÉ -->
+                <div class="hero-earned" id="hero-earned">
+                    <div class="hero-label">Encaissé ce mois</div>
+                    <div class="hero-amount" id="hero-amount">0 €</div>
+
+                </div>
+
+                <!-- Company breakdown -->
+                <div class="breakdown" id="breakdown">
+                    <div class="breakdown-card nira-card" id="breakdown-nira">
+                        <div class="breakdown-header">
+                            <div class="breakdown-dot nira-dot"></div>
+                            <span class="breakdown-name">Nira</span>
+                        </div>
+                        <div class="breakdown-amount" id="breakdown-nira-amount">0 €</div>
+                        <div class="breakdown-bar"><div class="breakdown-fill nira-fill" id="nira-fill"></div></div>
+                    </div>
+                    <div class="breakdown-card magenty-card" id="breakdown-magenty">
+                        <div class="breakdown-header">
+                            <div class="breakdown-dot magenty-dot"></div>
+                            <span class="breakdown-name">Magenty</span>
+                        </div>
+                        <div class="breakdown-amount" id="breakdown-magenty-amount">0 €</div>
+                        <div class="breakdown-bar"><div class="breakdown-fill magenty-fill" id="magenty-fill"></div></div>
+                    </div>
+                </div>
+
+                <!-- Chart -->
+                <div class="chart-card">
+                    <div class="chart-top">
+                        <span class="chart-title">6 derniers mois</span>
+                    </div>
+                    <div class="chart-wrap"><canvas id="revenue-chart"></canvas></div>
+                </div>
+
+                <!-- Recent -->
+                <div class="recent-section">
+                    <div class="section-top">
+                        <span class="section-title">Derniers contrats</span>
+                        <button class="link-btn" id="go-to-contracts">Voir tout</button>
+                    </div>
+                    <div id="recent-contracts-list" class="recent-list"></div>
+                </div>
+
+                <!-- Backup/Restore (Migration) -->
+                <div class="backup-section">
+                    <button class="btn-ghost btn-sm" id="btn-export">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Exporter mes données
+                    </button>
+                    <button class="btn-ghost btn-sm" id="btn-import-trigger">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Importer mes données
+                    </button>
+                    <input type="file" id="import-file" style="display:none" accept=".json">
+                </div>
+            </section>
+
+            <!-- ===== CONTRACTS ===== -->
+            <section id="view-contracts" class="view">
+                <header class="topbar">
+                    <div class="topbar-left">
+                        <h1 class="page-title">Contrats</h1>
+                    </div>
+                    <button class="btn-add" id="add-contract-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Nouveau
+                    </button>
+                </header>
+
+                <div class="filters-bar">
+                    <button class="filter-chip active" data-filter="all" id="filter-all">Tous</button>
+                    <button class="filter-chip" data-filter="cashed" id="filter-cashed">Encaissé</button>
+                    <div class="filter-separator"></div>
+                    <button class="filter-chip" data-cfilter="all" id="cfilter-all">Toutes</button>
+                    <button class="filter-chip" data-cfilter="nira" id="cfilter-nira">Nira</button>
+                    <button class="filter-chip" data-cfilter="magenty" id="cfilter-magenty">Magenty</button>
+                </div>
+
+                <div id="contracts-list" class="contracts-list"></div>
+                <div id="contracts-empty" class="empty-state" style="display:none;">
+                    <p>Aucun contrat</p>
+                    <button class="btn-add" id="add-contract-empty-btn">Ajouter un contrat</button>
+                </div>
+            </section>
+
+            <!-- ===== TASKS ===== -->
+            <section id="view-tasks" class="view">
+                <header class="topbar">
+                    <div class="topbar-left">
+                        <h1 class="page-title">Tâches</h1>
+                    </div>
+                    <button class="btn-add" id="add-task-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Nouvelle
+                    </button>
+                </header>
+
+                <div class="task-columns" id="task-columns">
+                    <div class="task-column" data-status="todo">
+                        <div class="col-head"><span class="col-dot dot-todo"></span><span class="col-label">À faire</span><span class="col-count" id="count-todo">0</span></div>
+                        <div class="task-list" id="list-todo" data-status="todo"></div>
+                    </div>
+                    <div class="task-column" data-status="doing">
+                        <div class="col-head"><span class="col-dot dot-doing"></span><span class="col-label">En cours</span><span class="col-count" id="count-doing">0</span></div>
+                        <div class="task-list" id="list-doing" data-status="doing"></div>
+                    </div>
+                    <div class="task-column" data-status="done">
+                        <div class="col-head"><span class="col-dot dot-done"></span><span class="col-label">Fait</span><span class="col-count" id="count-done">0</span></div>
+                        <div class="task-list" id="list-done" data-status="done"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ===== CALENDAR ===== -->
+            <section id="view-calendar" class="view">
+                <header class="topbar">
+                    <div class="topbar-left">
+                        <h1 class="page-title">Calendrier</h1>
+                        <div class="month-nav">
+                            <button class="icon-btn" id="cal-prev" aria-label="Mois précédent">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+                            </button>
+                            <span class="month-label" id="cal-month-display"></span>
+                            <button class="icon-btn" id="cal-next" aria-label="Mois suivant">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="btn-add" id="cal-add-event-btn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Nouvel évènement
+                    </button>
+                </header>
+
+                <div class="cal-container">
+                    <div class="cal-header">
+                        <span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span>
+                    </div>
+                    <div class="cal-grid" id="cal-grid"></div>
+                </div>
+
+                <!-- Day detail panel -->
+                <div class="day-panel" id="day-panel" style="display:none;">
+                    <div class="day-panel-header">
+                        <h3 id="day-panel-title"></h3>
+                        <button class="icon-btn" id="day-panel-close" aria-label="Fermer">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
+                    </div>
+                    <div id="day-panel-events" class="day-panel-tasks"></div>
+                    <button class="btn-add btn-add-sm" id="day-panel-add">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Ajouter
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ===== MODALS ===== -->
+    <!-- Contract modal -->
+    <div class="modal-overlay" id="contract-modal">
+        <div class="modal">
+            <div class="modal-head">
+                <h2 id="contract-modal-title">Nouveau contrat</h2>
+                <button class="modal-x" id="contract-modal-close" aria-label="Fermer">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form id="contract-form">
+                <input type="hidden" id="contract-id">
+                <div class="field">
+                    <label for="contract-name">Nom</label>
+                    <input type="text" id="contract-name" placeholder="Ex: Site web ClientX" required>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="contract-amount">Montant (€)</label>
+                        <input type="number" id="contract-amount" placeholder="0" min="0" step="0.01" required>
+                    </div>
+                    <div class="field">
+                        <label for="contract-month">Mois</label>
+                        <input type="month" id="contract-month" required>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Société</label>
+                    <div class="toggle-row" id="company-toggle">
+                        <button type="button" class="toggle-opt active" data-company="nira"><span class="chip-dot nira-dot"></span>Nira</button>
+                        <button type="button" class="toggle-opt" data-company="magenty"><span class="chip-dot magenty-dot"></span>Magenty</button>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-ghost" id="contract-cancel">Annuler</button>
+                    <button type="submit" class="btn-add" id="contract-submit">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Task modal -->
+    <div class="modal-overlay" id="task-modal">
+        <div class="modal">
+            <div class="modal-head">
+                <h2 id="task-modal-title">Nouvelle tâche</h2>
+                <button class="modal-x" id="task-modal-close" aria-label="Fermer">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form id="task-form">
+                <input type="hidden" id="task-id">
+                <div class="field">
+                    <label for="task-title">Titre</label>
+                    <input type="text" id="task-title" placeholder="Ex: Livrer maquettes" required>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="task-priority">Priorité</label>
+                        <select id="task-priority">
+                            <option value="low">Basse</option>
+                            <option value="medium" selected>Moyenne</option>
+                            <option value="high">Haute</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="task-status-select">Statut</label>
+                        <select id="task-status-select">
+                            <option value="todo">À faire</option>
+                            <option value="doing">En cours</option>
+                            <option value="done">Fait</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>Société</label>
+                    <div class="toggle-row" id="task-company-toggle">
+                        <button type="button" class="toggle-opt active" data-company="nira"><span class="chip-dot nira-dot"></span>Nira</button>
+                        <button type="button" class="toggle-opt" data-company="magenty"><span class="chip-dot magenty-dot"></span>Magenty</button>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-ghost" id="task-cancel">Annuler</button>
+                    <button type="submit" class="btn-add" id="task-submit">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    <!-- Event modal -->
+    <div class="modal-overlay" id="event-modal">
+        <div class="modal">
+            <div class="modal-head">
+                <h2 id="event-modal-title">Nouvel évènement</h2>
+                <button class="modal-x" id="event-modal-close" aria-label="Fermer">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <form id="event-form">
+                <input type="hidden" id="event-id">
+                <div class="field">
+                    <label for="event-title">Titre</label>
+                    <input type="text" id="event-title" placeholder="Ex: Rendez-vous client" required>
+                </div>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="event-date">Date</label>
+                        <input type="date" id="event-date" required>
+                    </div>
+                    <div class="field">
+                        <label for="event-time">Heure</label>
+                        <input type="time" id="event-time" required>
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Société</label>
+                    <div class="toggle-row" id="event-company-toggle">
+                        <button type="button" class="toggle-opt active" data-company="nira"><span class="chip-dot nira-dot"></span>Nira</button>
+                        <button type="button" class="toggle-opt" data-company="magenty"><span class="chip-dot magenty-dot"></span>Magenty</button>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-ghost" id="event-cancel">Annuler</button>
+                    <button type="submit" class="btn-add" id="event-submit">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(() => console.log('SW Registered'));
+            });
+        }
+    </script>
+</body>
+</html>
