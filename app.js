@@ -508,8 +508,8 @@ document.getElementById('add-task-btn').addEventListener('click', () => {
     editingTaskId = null;
     document.getElementById('task-modal-title').textContent = 'Nouvelle tâche';
     document.getElementById('task-submit').textContent = 'Ajouter';
-    document.getElementById('task-form').reset();
-    document.getElementById('task-duedate').value = calSelectedDate || '';
+    const form = document.getElementById('task-form');
+    if (form) form.reset();
     taskFormCompany = 'nira';
     setToggle('task-company-toggle', 'nira', 'company');
     openModal('task-modal');
@@ -761,6 +761,7 @@ function checkMigration() {
 }
 
 /* ===== INIT ===== */
+checkMigration();
 renderOverview();
 // syncSupabase() is now called automatically when Supabase CDN loads (see initSupabase)
 
