@@ -117,17 +117,36 @@ function switchView(view) {
     if (view === 'calendar') renderCalendar();
 }
 
-/* ===== COMPANY SWITCHER (overview) ===== */
+/* ===== OVERVIEW FILTERS ===== */
 document.querySelectorAll('#company-switcher .company-chip').forEach(c => {
     c.addEventListener('click', () => {
         companyFilter = c.dataset.company;
         document.querySelectorAll('#company-switcher .company-chip').forEach(x => x.classList.toggle('active', x === c));
         // Update sidebar dot
         const dot = document.getElementById('sidebar-dot');
-        if (companyFilter === 'nira') dot.style.background = 'var(--nira)';
-        else if (companyFilter === 'magenty') dot.style.background = 'var(--magenty)';
-        else dot.style.background = 'var(--accent)';
+        if (dot) {
+            if (companyFilter === 'nira') dot.style.background = 'var(--nira)';
+            else if (companyFilter === 'magenty') dot.style.background = 'var(--magenty)';
+            else dot.style.background = 'var(--accent)';
+        }
         renderOverview();
+    });
+});
+
+/* ===== CONTRACT FILTERS ===== */
+document.querySelectorAll('.filter-chip[data-filter]').forEach(c => {
+    c.addEventListener('click', () => {
+        contractFilter = c.dataset.filter;
+        document.querySelectorAll('.filter-chip[data-filter]').forEach(x => x.classList.toggle('active', x === c));
+        renderContracts();
+    });
+});
+
+document.querySelectorAll('.filter-chip[data-cfilter]').forEach(c => {
+    c.addEventListener('click', () => {
+        cFilterCompany = c.dataset.cfilter;
+        document.querySelectorAll('.filter-chip[data-cfilter]').forEach(x => x.classList.toggle('active', x === c));
+        renderContracts();
     });
 });
 
@@ -235,7 +254,8 @@ function renderChart() {
     // Bars
     months.forEach((m, i) => {
         const x = pad.left + (cW / 6) * i + (cW / 6 - barW) / 2;
-
+        const earnedH = (m.earned / maxVal) * cH;
+        const r = 4;
 
         if (earnedH > 0) {
             ctx.beginPath();
@@ -299,6 +319,7 @@ document.querySelectorAll('.filter-chip[data-cfilter]').forEach(c => {
 
 function renderContracts() {
     let filtered = [...contracts];
+    if (contractFilter === 'cashed') filtered = filtered.filter(c => c.status === 'cashed');
     if (cFilterCompany !== 'all') filtered = filtered.filter(c => c.company === cFilterCompany);
     filtered.sort((a, b) => b.createdAt - a.createdAt);
 
@@ -449,18 +470,22 @@ function renderTasks() {
             save(SK.tasks, tasks); renderTasks(); toast('Supprimée');
         }));
 
-        initDrag(list);
+        list.querySelectorAll('.task-card').forEach(card => {
+            card.addEventListener('dragstart', e => { dragId = card.dataset.id; card.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
+            card.addEventListener('dragend', () => { card.classList.remove('dragging'); dragId = null; document.querySelectorAll('.task-list').forEach(l => l.classList.remove('drag-over')); });
+        });
+
+        initDragOnce(list);
     });
 }
 
 /* ===== DRAG & DROP ===== */
 let dragId = null;
 
-function initDrag(list) {
-    list.querySelectorAll('.task-card').forEach(card => {
-        card.addEventListener('dragstart', e => { dragId = card.dataset.id; card.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; });
-        card.addEventListener('dragend', () => { card.classList.remove('dragging'); dragId = null; document.querySelectorAll('.task-list').forEach(l => l.classList.remove('drag-over')); });
-    });
+function initDragOnce(list) {
+    if (list._dragInit) return;
+    list._dragInit = true;
+    
     list.addEventListener('dragover', e => { e.preventDefault(); list.classList.add('drag-over'); });
     list.addEventListener('dragleave', () => list.classList.remove('drag-over'));
     list.addEventListener('drop', e => {
@@ -506,6 +531,7 @@ function openEditTask(id) {
     document.getElementById('task-title').value = t.title;
     document.getElementById('task-priority').value = t.priority;
     document.getElementById('task-status-select').value = t.status;
+    taskFormCompany = t.company || 'nira';
     setToggle('task-company-toggle', taskFormCompany, 'company');
     openModal('task-modal');
 }
