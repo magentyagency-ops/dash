@@ -38,26 +38,62 @@ async function dbDelete(table, id) {
 async function syncSupabase() {
     if (!supabase) return;
     try {
+        console.log('Syncing Supabase...');
         const [resC, resT, resE] = await Promise.all([
             supabase.from('contracts').select('*'),
             supabase.from('tasks').select('*'),
             supabase.from('events').select('*')
         ]);
         
-        if (resC.data && resC.data.length > 0) { contracts = resC.data; save(SK.contracts, contracts); }
-        if (resT.data && resT.data.length > 0) { tasks = resT.data; save(SK.tasks, tasks); }
-        if (resE.data && resE.data.length > 0) { events = resE.data; save(SK.events, events); }
-        
-        // Push local to Supabase if Supabase is empty (Migration)
-        if ((!resC.data || resC.data.length === 0) && contracts.length > 0) { contracts.forEach(c => dbUpsert('contracts', c)); }
-        if ((!resT.data || resT.data.length === 0) && tasks.length > 0) { tasks.forEach(t => dbUpsert('tasks', t)); }
-        if ((!resE.data || resE.data.length === 0) && events.length > 0) { events.forEach(e => dbUpsert('events', e)); }
+        let changed = false;
 
-        if (currentView === 'overview') renderOverview();
-        if (currentView === 'contracts') renderContracts();
-        if (currentView === 'tasks') renderTasks();
-        if (currentView === 'calendar') renderCalendar();
+        // MERGE logic: Keep local if it's not in Supabase, but update from Supabase
+        const merge = (local, remote, key = 'id') => {
+            if (!remote) return local;
+            const merged = [...local];
+            remote.forEach(r => {
+                const idx = merged.findIndex(l => l[key] === r[key]);
+                if (idx > -1) {
+                    if (JSON.stringify(merged[idx]) !== JSON.stringify(r)) {
+                        merged[idx] = r;
+                        changed = true;
+                    }
+                } else {
+                    merged.push(r);
+                    changed = true;
+                }
+            });
+            return merged;
+        };
+
+        if (resC.data) { contracts = merge(contracts, resC.data); if (changed) save(SK.contracts, contracts); changed = false; }
+        if (resT.data) { tasks = merge(tasks, resT.data); if (changed) save(SK.tasks, tasks); changed = false; }
+        if (resE.data) { events = merge(events, resE.data); if (changed) save(SK.events, events); changed = false; }
+        
+        // Push local to Supabase if not there
+        const pushIfMissing = async (table, local, remote) => {
+            if (!remote) return;
+            const missing = local.filter(l => !remote.find(r => r.id === l.id));
+            for (const item of missing) {
+                await dbUpsert(table, item);
+            }
+        };
+
+        await Promise.all([
+            pushIfMissing('contracts', contracts, resC.data),
+            pushIfMissing('tasks', tasks, resT.data),
+            pushIfMissing('events', events, resE.data)
+        ]);
+
+        refreshUI();
     } catch (e) { console.error('Supabase sync error:', e); }
+}
+
+function refreshUI() {
+    if (currentView === 'overview') renderOverview();
+    if (currentView === 'contracts') renderContracts();
+    if (currentView === 'tasks') renderTasks();
+    if (currentView === 'calendar') renderCalendar();
 }
 
 /* ===== STATE ===== */
@@ -761,18 +797,32 @@ function checkMigration() {
 }
 
 /* ===== INIT ===== */
-checkMigration();
-renderOverview();
-// syncSupabase() is now called automatically when Supabase CDN loads (see initSupabase)
+function init() {
+    try {
+        checkMigration();
+        renderOverview();
+        
+        // Wake up Safari mobile touch interactions
+        document.addEventListener('touchstart', () => {}, { passive: true });
+        
+        // Fix for Safari 100vh / address bar issues
+        const fixVH = () => {
+            let vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        };
+        window.addEventListener('resize', fixVH);
+        window.addEventListener('orientationchange', fixVH);
+        fixVH();
+        
+        console.log('App initialized');
+    } catch (e) {
+        console.error('Init error:', e);
+    }
+}
 
-// Wake up Safari mobile touch interactions
-document.addEventListener('touchstart', () => {}, { passive: true });
-
-// Fix for Safari 100vh / address bar issues
-const fixVH = () => {
-    let vh = window.innerHeight * 0.01;
-    document.documentElement.style.setProperty('--vh', `${vh}px`);
-};
-window.addEventListener('resize', fixVH);
-window.addEventListener('orientationchange', fixVH);
-fixVH();
+// Start immediately
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
