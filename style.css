@@ -30,17 +30,27 @@
     --ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-html { font-size: 15px; }
+html { 
+    font-size: 16px; 
+    height: -webkit-fill-available;
+}
 body {
-    font-family: 'Inter', -apple-system, sans-serif;
+    font-family: 'Inter', -apple-system, system-ui, sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
+    min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
 }
 
-/* ===== LAYOUT ===== */
-#app { display: flex; min-height: 100vh; }
+/* Fix for Safari 100vh issue */
+#app { 
+    display: flex; 
+    min-height: 100vh;
+    min-height: 100dvh;
+}
 
 /* ===== SIDEBAR — icon-only, ultra minimal ===== */
 #sidebar {
@@ -88,6 +98,7 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.2s var(--ease);
+    touch-action: manipulation;
 }
 
 .nav-btn:hover { color: var(--text-2); background: var(--surface-2); }
@@ -111,8 +122,12 @@ body {
 }
 
 .view { display: none; }
-.view.active { display: block; animation: viewIn 0.4s var(--ease); }
-@keyframes viewIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.view.active { 
+    display: block !important; 
+    opacity: 1 !important;
+    animation: viewIn 0.3s var(--ease) forwards; 
+}
+@keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ===== TOPBAR ===== */
 .topbar {
@@ -843,13 +858,18 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 100;
+    z-index: 2000;
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.2s;
+    transition: opacity 0.25s var(--ease), visibility 0.25s var(--ease);
 }
 
-.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-overlay.open { 
+    opacity: 1; 
+    visibility: visible;
+    pointer-events: all; 
+}
 
 .modal {
     background: var(--surface);
@@ -1016,7 +1036,8 @@ body {
         background: rgba(255,255,255,0.92);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        z-index: 100;
+        z-index: 1000;
+        isolation: isolate;
     }
 
     .sidebar-top { flex-direction: row; gap: 0; width: 100%; }
@@ -1188,7 +1209,11 @@ body {
         left: 12px;
     }
 
-    .toast { font-size: 0.82rem; text-align: center; }
+    .toast { 
+        font-size: 0.82rem; 
+        text-align: center; 
+        margin: 0 12px;
+    }
 }
 
 /* ---- Small phones ---- */

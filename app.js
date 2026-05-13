@@ -1,7 +1,12 @@
 /* ===== DATA & SUPABASE ===== */
 const supabaseUrl = 'https://udqmlctpcprzoknkqowb.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkcW1sY3RwY3Byem9rbmtxb3diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MzAxMjgsImV4cCI6MjA5NDEwNjEyOH0.AaRohmkuAysf6uhOZ0doCxmsIC5U7br1VQW3DNPcTQY';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+let supabase;
+try {
+    if (window.supabase) {
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    }
+} catch (e) { console.error('Supabase init failed', e); }
 
 const SK = { contracts: 'dash_contracts', tasks: 'dash_tasks', events: 'dash_events' };
 const load = k => { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } };
@@ -12,14 +17,17 @@ let tasks = load(SK.tasks);
 let events = load(SK.events);
 
 async function dbUpsert(table, item) {
+    if (!supabase) return;
     try { await supabase.from(table).upsert(item); } catch (e) { console.error('Supabase error:', e); }
 }
 
 async function dbDelete(table, id) {
+    if (!supabase) return;
     try { await supabase.from(table).delete().eq('id', id); } catch (e) { console.error('Supabase error:', e); }
 }
 
 async function syncSupabase() {
+    if (!supabase) return;
     try {
         const [resC, resT, resE] = await Promise.all([
             supabase.from('contracts').select('*'),
@@ -73,7 +81,19 @@ function toast(msg) {
 }
 
 /* ===== NAV ===== */
-document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => switchView(b.dataset.view)));
+document.querySelectorAll('.nav-btn').forEach(b => {
+    const handleNav = (e) => {
+        e.preventDefault();
+        switchView(b.dataset.view);
+    };
+    b.addEventListener('click', handleNav);
+    b.addEventListener('touchstart', (e) => {
+        // Only trigger if it's a clean tap
+        if (e.touches.length === 1) {
+            // handleNav(e); // Removing to avoid double triggers if click also fires
+        }
+    }, { passive: true });
+});
 
 function switchView(view) {
     currentView = view;
@@ -151,6 +171,7 @@ function animVal(id, target) {
 /* ===== CHART ===== */
 function renderChart() {
     const canvas = document.getElementById('revenue-chart');
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.parentElement.getBoundingClientRect();
@@ -707,3 +728,15 @@ function checkMigration() {
 /* ===== INIT ===== */
 renderOverview();
 syncSupabase();
+
+// Wake up Safari mobile touch interactions
+document.addEventListener('touchstart', () => {}, { passive: true });
+
+// Fix for Safari 100vh / address bar issues
+const fixVH = () => {
+    let vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+};
+window.addEventListener('resize', fixVH);
+window.addEventListener('orientationchange', fixVH);
+fixVH();
