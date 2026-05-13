@@ -1,12 +1,21 @@
 /* ===== DATA & SUPABASE ===== */
 const supabaseUrl = 'https://udqmlctpcprzoknkqowb.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkcW1sY3RwY3Byem9rbmtxb3diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1MzAxMjgsImV4cCI6MjA5NDEwNjEyOH0.AaRohmkuAysf6uhOZ0doCxmsIC5U7br1VQW3DNPcTQY';
-let supabase;
-try {
-    if (window.supabase) {
-        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-    }
-} catch (e) { console.error('Supabase init failed', e); }
+let supabase = null;
+
+function initSupabase() {
+    try {
+        if (window.supabase && !supabase) {
+            supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+            console.log('Supabase connected');
+            syncSupabase();
+        }
+    } catch (e) { console.error('Supabase init failed', e); }
+}
+
+// If Supabase CDN already loaded (cached), init now; otherwise wait for async callback
+if (window.supabase) { initSupabase(); }
+window._supabaseReady = initSupabase;
 
 const SK = { contracts: 'dash_contracts', tasks: 'dash_tasks', events: 'dash_events' };
 const load = k => { try { return JSON.parse(localStorage.getItem(k)) || []; } catch { return []; } };
@@ -727,7 +736,7 @@ function checkMigration() {
 
 /* ===== INIT ===== */
 renderOverview();
-syncSupabase();
+// syncSupabase() is now called automatically when Supabase CDN loads (see initSupabase)
 
 // Wake up Safari mobile touch interactions
 document.addEventListener('touchstart', () => {}, { passive: true });
